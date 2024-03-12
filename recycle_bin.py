@@ -40,31 +40,33 @@ def recycle_file():
         print("You didn't specify what file to recycle! For example, \"recycle_bin recycle_file DocumentName.txt\"")
         sys.exit("no file was passed to recycle")
 
-    source_path = abspath(sys.argv[2])
-    timestamp = str( time.time() )
+    for current_argument in sys.argv[2:]:
 
-    # We need to generate eight random hexadecimal characters to identify our file with.
-    # I'm using 'secrets' right now, but this can also be done with 'random'.
-    hex_id = secrets.token_hex(4)
-    hex_id = hex_id.upper()
-    
-    # The path for our metadata file.
-    recycle_metadata_path = recycle_bin_path + "/" + hex_id + ".metadata"
-    
-    # Make sure there's no collision with an existing item
-    while os.path.exists(recycle_metadata_path):
+        source_path = abspath(current_argument)
+        timestamp = str( time.time() )
+
+        # We need to generate eight random hexadecimal characters to identify our file with.
+        # I'm using 'secrets' right now, but this can also be done with 'random'.
         hex_id = secrets.token_hex(4)
         hex_id = hex_id.upper()
-        recycle_metadata_path = recycle_bin_path + "/" + hex_id + ".metadata"
-  
-    # Make and open that metadata file.
-    # The "a" is for append-only mode, so we can only add to the end of it.
-    recycle_metadata_object = open(recycle_metadata_path, "a")
-    recycle_metadata_object.writelines(["Recycle Bin version = " + version, "\noriginal path = " + source_path, "\ntimestamp = " + timestamp])
-    recycle_metadata_object.close()
     
-    recycled_file_path = recycle_bin_path + "/" + hex_id + ".file"
-    subprocess.call(["mv", "--verbose", source_path, recycled_file_path])
+        # The path for our metadata file.
+        recycle_metadata_path = recycle_bin_path + "/" + hex_id + ".metadata"
+    
+        # Make sure there's no collision with an existing item
+        while os.path.exists(recycle_metadata_path):
+            hex_id = secrets.token_hex(4)
+            hex_id = hex_id.upper()
+            recycle_metadata_path = recycle_bin_path + "/" + hex_id + ".metadata"
+  
+        # Make and open that metadata file.
+        # The "a" is for append-only mode, so we can only add to the end of it.
+        recycle_metadata_object = open(recycle_metadata_path, "a")
+        recycle_metadata_object.writelines(["Recycle Bin version = " + version, "\noriginal path = " + source_path, "\ntimestamp = " + timestamp])
+        recycle_metadata_object.close()
+    
+        recycled_file_path = recycle_bin_path + "/" + hex_id + ".file"
+        subprocess.call(["mv", "--verbose", source_path, recycled_file_path])
     
     return
 
