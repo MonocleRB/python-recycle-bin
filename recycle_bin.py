@@ -9,7 +9,7 @@ import secrets
 import time
 
 version = "horrendously unstable"
-recycle_bin_path = os.path.expanduser("~/.recycle_bin")
+recycle_bin_directory = os.path.expanduser("~/.recycle_bin")
 argument_count = len(sys.argv)
 argument_count_zero_ordered = argument_count - 1
 
@@ -51,13 +51,13 @@ def recycle_file():
         hex_id = hex_id.upper()
     
         # The path for our metadata file.
-        recycle_metadata_path = recycle_bin_path + "/" + hex_id + ".metadata"
+        recycle_metadata_path = recycle_bin_directory + "/" + hex_id + ".metadata"
     
         # Make sure there's no collision with an existing item
         while os.path.exists(recycle_metadata_path):
             hex_id = secrets.token_hex(4)
             hex_id = hex_id.upper()
-            recycle_metadata_path = recycle_bin_path + "/" + hex_id + ".metadata"
+            recycle_metadata_path = recycle_bin_directory + "/" + hex_id + ".metadata"
   
         # Make and open that metadata file.
         # The "a" is for append-only mode, so we can only add to the end of it.
@@ -68,6 +68,26 @@ def recycle_file():
         recycled_file_path = recycle_bin_path + "/" + hex_id + ".file"
         subprocess.call(["mv", "--verbose", source_path, recycled_file_path])
     
+    return
+
+def permanently_delete_file():
+    if argument_count == 2:
+        print("You didn't specify what file to delete! For example, \"recycle_bin permanently_delete ae8f51c4\"")
+        sys.exit("no file was passed to delete")
+
+    for current_argument in sys.argv[2:]:
+        path_to_delete = recycle_bin_directory + current_argument + ".*"
+        subprocess.call(["rm", "-rf", path_to_delete])
+
+    return
+
+def permanently_delete_all():
+    if argument_count != 2
+        print("Warning: We weren't expecting arguments. Did you mean permanently_delete_file instead of permanently_delete_all?")
+        sys.exit("unexpected arguments")
+
+    all_items_wildcard = recycle_bin_directory + "*"
+    subprocess.call(["rm", "-rf", all_items_wildcard])
     return
 
 if __name__ == "__main__":
