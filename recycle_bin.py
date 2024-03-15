@@ -15,7 +15,7 @@ argument_count_zero_ordered = argument_count - 1
 
 def main():
     if argument_count == 1:
-        print("You didn't specify any command or file!")
+        print("You didn't specify any command or file! For example, \"recycle_bin recycle_file DocumentName.txt ImageName.png\"")
         sys.exit("no arguments were passed")
     
     command = sys.argv[1]
@@ -28,17 +28,17 @@ def main():
         put_back_all()
     elif command == "permanently_delete_file":
         permanently_delete_file()
-    elif command == "permanently_delete_all":
-        permanently_delete_all()
+    elif command == "permanently_delete_all_files":
+        permanently_delete_all_files()
     else:
-        print("recycle_bin has no such command. Make sure you include both the command and the file, for example \"recycle_bin recycle_file DocumentName.txt\"")
+        print("recycle_bin has no such command. Make sure you include both the command and the files, for example \"recycle_bin recycle_file DocumentName.txt ImageName.png\"")
         sys.exit("recycle_bin has no such command")
     return
   
 def recycle_file():
     if argument_count == 2:
-        print("You didn't specify what file to recycle! For example, \"recycle_bin recycle_file DocumentName.txt\"")
-        sys.exit("no file was passed to recycle")
+        print("You didn't specify what files to recycle! For example, \"recycle_bin recycle_file DocumentName.txt ImageName.png\"")
+        sys.exit("no files were passed to recycle")
 
     for current_argument in sys.argv[2:]:
 
@@ -61,32 +61,31 @@ def recycle_file():
   
         # Make and open that metadata file.
         # The "a" is for append-only mode, so we can only add to the end of it.
-        recycle_metadata_object = open(recycle_metadata_path, "a")
-        recycle_metadata_object.writelines(["Recycle Bin version = " + version, "\noriginal path = " + source_path, "\ntimestamp = " + timestamp])
-        recycle_metadata_object.close()
+        with open(recycle_metadata_path, "a") as recycle_metadata_object
+            recycle_metadata_object.write("Recycle Bin version = " + version + "\n" +"original path = " + source_path + "\n" + "timestamp = " + timestamp)
     
-        recycled_file_path = recycle_bin_path + "/" + hex_id + ".file"
+        recycled_file_path = recycle_bin_directory + "/" + hex_id + ".file"
         subprocess.call(["mv", "--verbose", source_path, recycled_file_path])
     
     return
 
 def permanently_delete_file():
     if argument_count == 2:
-        print("You didn't specify what file to delete! For example, \"recycle_bin permanently_delete ae8f51c4\"")
-        sys.exit("no file was passed to delete")
+        print("You didn't specify what files to delete! For example, \"recycle_bin permanently_delete_file D84156C5 635688C0\"")
+        sys.exit("no files were passed to delete")
 
     for current_argument in sys.argv[2:]:
-        path_to_delete = recycle_bin_directory + current_argument + ".*"
-        subprocess.call(["rm", "-rf", path_to_delete])
+        wildcard_to_delete = recycle_bin_directory + "/" + current_argument + ".*"
+        subprocess.call(["rm", "-rf", wildcard_to_delete])
 
     return
 
-def permanently_delete_all():
-    if argument_count != 2
-        print("Warning: We weren't expecting arguments. Did you mean permanently_delete_file instead of permanently_delete_all?")
+def permanently_delete_all_files():
+    if argument_count != 2:
+        print("Warning: We weren't expecting arguments. Did you mean permanently_delete_file instead of permanently_delete_all_files?")
         sys.exit("unexpected arguments")
 
-    all_items_wildcard = recycle_bin_directory + "*"
+    all_items_wildcard = recycle_bin_directory + "/" + "*"
     subprocess.call(["rm", "-rf", all_items_wildcard])
     return
 
