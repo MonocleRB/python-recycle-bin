@@ -49,23 +49,23 @@ def recycle_file():
         # I'm using 'secrets' right now, but this can also be done with 'random'.
         hex_id = secrets.token_hex(4)
         hex_id = hex_id.upper()
-    
+
+        recycled_file = recycle_bin_directory + "/" + hex_id + ".metadata"
         metadata_file = recycle_bin_directory + "/" + hex_id + ".metadata"
-        wildcard = recycle_bin_directory + "/" + hex_id + ".*"
     
-        # Make sure there's no collision with an existing item
-        while os.path.exists(wildcard):
+        # Make sure there's no collision with an existing file
+        while os.path.exists(recycled_file) or os.path.exists(metadata_file):
             hex_id = secrets.token_hex(4)
             hex_id = hex_id.upper()
+            recycled_file = recycle_bin_directory + "/" + hex_id + ".metadata"
             metadata_file = recycle_bin_directory + "/" + hex_id + ".metadata"
   
         # Make and open that metadata file.
         # The "a" is for append-only mode, so we can only add to the end of it.
-        with open(metadata_file, "a") as recycle_metadata_object:
-            recycle_metadata_object.write("Recycle Bin version = " + version + "\n" +"original path = " + source_path + "\n" + "timestamp = " + timestamp)
+        with open(metadata_file, "a") as metadata_object:
+            metadata_object.write("Recycle Bin version = " + version + "\n" +"original path = " + source_path + "\n" + "timestamp = " + timestamp)
     
-        recycled_file_path = recycle_bin_directory + "/" + hex_id + ".item"
-        subprocess.run(["mv", "--verbose", source_path, recycled_file_path])
+        subprocess.run(["mv", source_path, recycled_file])
     
     return
 
@@ -100,8 +100,10 @@ def permanently_delete_file():
         sys.exit("no files were passed to delete")
 
     for hex_id in sys.argv[2:]:
-        wildcard_to_delete = recycle_bin_directory + "/" + hex_id + ".*"
-        subprocess.run(["rm", "-rf", wildcard_to_delete])
+        recycled_file_to_delete = recycle_bin_directory + "/" + hex_id + ".file"
+        metadata_file_to_delete = recycle_bin_directory + "/" + hex_id + ".metadata"
+        subprocess.run(["rm", "-rf", recycled_file_to_delete])
+        subprocess.run(["rm", "-rf", metadata_file_to_delete])
 
     return
 
@@ -110,8 +112,8 @@ def permanently_delete_all_files():
         print("Warning: We weren't expecting arguments. Did you mean permanently_delete_file instead of permanently_delete_all_files?")
         sys.exit("unexpected arguments")
 
-    all_items_wildcard = recycle_bin_directory + "/" + "*"
-    subprocess.run(["rm", "-rf", all_items_wildcard])
+    subprocess.run(["rm", "-rf", recycle_bin_directory])
+    subprocess.run(["mkdir", recycle_bin_directory])
     return
 
 def get_value(filename, key):
@@ -125,7 +127,7 @@ def get_value(filename, key):
                 return value
 
 def put_back_internal(hex_id):
-    recycled_path = recycle_bin_directory + "/" + hex_id + ".item"
+    recycled_file = recycle_bin_directory + "/" + hex_id + ".file"
     metadata_file = recycle_bin_directory + "/" + hex_id + ".metadata"
     original_path = get_value(metadata_file, "original path")
 
@@ -135,9 +137,9 @@ def put_back_internal(hex_id):
         human_timestamp = datetime.datetime.fromtimestamp(unix_timestamp)
         # Human-readable timestamps have whitespace, necessitating a quote escape
         timestamped_path = "\"" + human_timestamp + "." + original_path + "\""
-        subprocess.run(["mv", "--verbose", recycled_path, timestamped_path])
+        subprocess.run(["mv", recycled_file, timestamped_path])
         
-    else: subprocess.run(["mv", "--verbose", recycled_path, original_path])
+    else: subprocess.run(["mv", recycled_file, original_path])
         
     subprocess.run(["rm", "-f", metadata_file])
 
